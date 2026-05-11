@@ -419,7 +419,7 @@
         position: relative;
       }
       .brain-scroll-height {
-        height: 1000vh;
+        height: 700vh;
       }
       .brain-changes {
         background: var(--bg-dark);
@@ -637,10 +637,10 @@
         transition: all 0.3s;
       }
       .final-btn:hover {
-        background: var(--accent);
-        border-color: var(--accent);
+        background: var(--accent-rose);
+        border-color: var(--accent-rose);
         transform: translateY(-2px);
-        box-shadow: 0 6px 24px rgba(196, 30, 77, 0.3);
+        box-shadow: 0 6px 24px rgba(232, 90, 138, 0.3);
       }
       .final-btn svg {
         width: 14px;
@@ -1556,27 +1556,13 @@
         buildNeurons();
       }
 
-      // First 70% of scroll drives content (progress 0→1).
-      // Last 30% is the fade-to-black phase.
-      const BRAIN_CONTENT_FRAC = 0.70;
-
       function getBrainProg() {
         const wrap = document.getElementById("brainChangesWrap");
         if (!wrap) return 0;
         const wrapTop = wrap.offsetTop;
         const scrollableH = wrap.offsetHeight - window.innerHeight;
         const local = window.scrollY - wrapTop;
-        return Math.max(0, Math.min(1, local / (scrollableH * BRAIN_CONTENT_FRAC)));
-      }
-
-      function getBrainFade() {
-        const wrap = document.getElementById("brainChangesWrap");
-        if (!wrap) return 0;
-        const wrapTop = wrap.offsetTop;
-        const scrollableH = wrap.offsetHeight - window.innerHeight;
-        const local = window.scrollY - wrapTop;
-        const fadeStart = scrollableH * BRAIN_CONTENT_FRAC;
-        return Math.max(0, Math.min(1, (local - fadeStart) / (scrollableH * (1 - BRAIN_CONTENT_FRAC))));
+        return Math.max(0, Math.min(1, local / scrollableH));
       }
 
       // Text phase content
@@ -1819,8 +1805,8 @@
         bnCtx.stroke();
         bnCtx.setLineDash([]);
 
-        // Fade to black overlay
-        const fade = getBrainFade();
+        // Fade to black at end of scroll
+        const fade = Math.max(0, (p - 0.90) / 0.10);
         if (fade > 0) {
           bnCtx.fillStyle = `rgba(15,15,26,${fade})`;
           bnCtx.fillRect(0, 0, W, H);
