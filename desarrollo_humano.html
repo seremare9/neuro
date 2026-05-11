@@ -1801,14 +1801,15 @@
         bnCtx.stroke();
         bnCtx.setLineDash([]);
 
-        // Fade out canvas + fade in button simultaneously
+        // Fade out canvas, button appears only at the very end
         const fade = Math.max(0, (p - 0.88) / 0.12);
+        const btnFade = Math.max(0, (p - 0.97) / 0.03);
         const bnEl = document.getElementById("brainNeuronCanvas");
         const btnEl = document.getElementById("finalBtn");
         if (bnEl) bnEl.style.opacity = 1 - fade;
         if (btnEl) {
-          btnEl.style.opacity = fade;
-          btnEl.style.pointerEvents = fade > 0.1 ? "auto" : "none";
+          btnEl.style.opacity = btnFade;
+          btnEl.style.pointerEvents = btnFade > 0.1 ? "auto" : "none";
         }
       }
 
