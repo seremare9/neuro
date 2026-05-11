@@ -592,15 +592,6 @@
         transform: scale(1.3);
       }
 
-      .final-section {
-        position: relative;
-        height: 100vh;
-        background: #0f0f1a;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
 
       .b {
         color: var(--accent-rose);
@@ -620,6 +611,13 @@
         color: var(--accent);
       }
       .final-btn {
+        position: fixed;
+        bottom: 48px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -634,7 +632,7 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        transition: all 0.3s;
+        transition: opacity 0.4s;
       }
       .final-btn:hover {
         background: var(--accent-rose);
@@ -759,12 +757,10 @@
       <div class="brain-scroll-height"></div>
     </div>
 
-    <section class="final-section" id="finalSection">
-      <a href="index.html" class="final-btn">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver al inicio
-      </a>
-    </section>
+    <a href="index.html" class="final-btn" id="finalBtn">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg>
+      Volver al inicio
+    </a>
 
     <script>
       // ── WATERCOLOR HERO CANVAS (desarrollo) ──
@@ -1805,11 +1801,14 @@
         bnCtx.stroke();
         bnCtx.setLineDash([]);
 
-        // Fade to black at end of scroll
-        const fade = Math.max(0, (p - 0.90) / 0.10);
-        if (fade > 0) {
-          bnCtx.fillStyle = `rgba(15,15,26,${fade})`;
-          bnCtx.fillRect(0, 0, W, H);
+        // Fade out canvas + fade in button simultaneously
+        const fade = Math.max(0, (p - 0.88) / 0.12);
+        const bnEl = document.getElementById("brainNeuronCanvas");
+        const btnEl = document.getElementById("finalBtn");
+        if (bnEl) bnEl.style.opacity = 1 - fade;
+        if (btnEl) {
+          btnEl.style.opacity = fade;
+          btnEl.style.pointerEvents = fade > 0.1 ? "auto" : "none";
         }
       }
 
