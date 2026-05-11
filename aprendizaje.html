@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cerebro en Construcción</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Poppins:wght@400;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap");
+
+      :root {
+        --bg-brain: #0f0f1a;
+        --bg: #faf7f2;
+        --text-dark: #1a1a1a;
+        --text-secondary: #6b6b6b;
+        --text-light: #999;
+        --accent: #f0716e;
+        --accent-soft: #f4a261;
+        --serif: "Playfair Display", Georgia, serif;
+        --sans: "Source Sans 3", -apple-system, sans-serif;
+        --mono: "JetBrains Mono", monospace;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      b,
+      strong {
+        color: #f07870;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg-brain);
+        color: #fff;
+        font-family: var(--sans);
+        font-size: 18px;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      .progress-track {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 3px;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.06);
+        z-index: 1000;
+      }
+      .progress-fill {
+        width: 100%;
+        height: 0%;
+        background: #f07870;
+        transition: height 0.08s linear;
+      }
+
+      .age-pill {
+        position: fixed;
+        top: 16px;
+        right: 28px;
+        z-index: 999;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 100px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: all 0.4s;
+        pointer-events: none;
+      }
+      .age-pill.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+        text-align: center;
+        padding: 60px 24px;
+        position: relative;
+        background: #f5f0eb;
+        overflow: hidden;
+        z-index: 2;
+      }
+      .hero-wc-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .hero-eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: #c04840;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+      }
+      .hero h1 {
+        font-family: "DM Sans", sans-serif;
+        font-size: clamp(3.2rem, 8.5vw, 7rem);
+        font-weight: 900;
+        line-height: 0.92;
+        color: #1a0d0a;
+        max-width: 820px;
+        letter-spacing: -0.03em;
+        position: relative;
+        z-index: 1;
+      }
+      .hero h1 em {
+        font-style: normal;
+        font-weight: 900;
+        color: #f07870;
+        display: block;
+      }
+      .hero-sub {
+        margin-top: 0;
+        font-size: clamp(1rem, 2vw, 1.15rem);
+        max-width: 44ch;
+        color: #4a2820;
+        font-weight: 300;
+        line-height: 1.65;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+      }
+      .scroll-cue {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #9a5850;
+        animation: cueBounce 2s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+      }
+      .scroll-cue svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+      @keyframes cueBounce {
+        0%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.7;
+        }
+        50% {
+          transform: translateY(6px);
+          opacity: 1;
+        }
+      }
+
+      .brain-wrap {
+        position: relative;
+        z-index: 1;
+      }
+      .brain-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #brainCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .scroll-height {
+        height: 900vh;
+        position: relative;
+      }
+
+      .brain-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        pointer-events: none;
+        text-align: center;
+        padding: 0 32px;
+      }
+      .brain-overlay .age-display {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #f07870;
+        margin-bottom: 12px;
+        opacity: 0;
+        transition: opacity 0.5s;
+        text-shadow:
+          0 1px 6px rgba(0, 0, 0, 1),
+          0 2px 16px rgba(0, 0, 0, 0.95),
+          0 4px 32px rgba(0, 0, 0, 0.8);
+      }
+      .brain-overlay .age-display.visible {
+        opacity: 1;
+      }
+      .brain-overlay h3 {
+        font-family: "Poppins", sans-serif;
+        font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 14px;
+        max-width: 500px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        text-shadow:
+          0 2px 8px rgba(0, 0, 0, 1),
+          0 4px 24px rgba(0, 0, 0, 0.95),
+          0 8px 48px rgba(0, 0, 0, 0.9);
+      }
+      .brain-overlay h3.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .brain-overlay p {
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.55);
+        max-width: 420px;
+        opacity: 0;
+        transform: translateY(16px);
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+        text-shadow:
+          0 1px 8px rgba(0, 0, 0, 0.9),
+          0 2px 16px rgba(0, 0, 0, 0.7);
+      }
+      .brain-overlay p.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .stimulus-panel {
+        position: fixed;
+        bottom: 48px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+      }
+      .stimulus-panel.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .stim-btn {
+        padding: 8px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+        font-family: var(--sans);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .stim-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.35);
+        transform: translateY(-2px);
+      }
+      .stim-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 4px 24px rgba(232, 87, 58, 0.4);
+      }
+
+      .final-msg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 8;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: center;
+        padding: 0 32px;
+      }
+      .final-msg.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .final-msg h2 {
+        font-family: "Poppins", sans-serif;
+        font-size: clamp(1.6rem, 4vw, 2.6rem);
+        font-weight: 700;
+        line-height: 1.2;
+        color: #fff;
+        max-width: 500px;
+        margin-bottom: 32px;
+      }
+      .final-msg h2 em {
+        font-style: italic;
+        font-weight: 400;
+        color: var(--accent);
+      }
+      .final-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        color: #fff;
+        text-decoration: none;
+        padding: 12px 28px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s;
+      }
+      .final-btn:hover {
+        background: #f07870;
+        border-color: #f07870;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(240, 120, 110, 0.3);
+      }
+      .stim-hint {
+        width: 100%;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 4px;
+        transition: opacity 0.5s;
+        animation: hintPulse 2.5s ease-in-out infinite;
+      }
+      @keyframes hintPulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .back-btn {
+        position: fixed;
+        top: 16px;
+        left: 20px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        padding: 7px 14px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s;
+      }
+      .back-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      .back-btn svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+      .hero .back-btn-light {
+        position: absolute;
+        top: 24px;
+        left: 24px;
+        color: var(--text-light);
+        background: rgba(0, 0, 0, 0.03);
+        border-color: var(--border);
+        backdrop-filter: none;
+      }
+      .hero .back-btn-light:hover {
+        color: var(--text-dark);
+        background: rgba(0, 0, 0, 0.06);
+      }
+
+      @media (max-width: 640px) {
+        body {
+          font-size: 16px;
+        }
+        .brain-overlay {
+          padding: 0 20px;
+        }
+        .stimulus-panel {
+          bottom: 28px;
+          gap: 6px;
+        }
+        .stim-btn {
+          padding: 6px 14px;
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="age-pill" id="agePill">0 meses</div>
+    <a href="index.html" class="back-btn" id="backBtn"
+      ><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></svg
+      >Volver</a
+    >
+
+    <section class="hero">
+      <canvas class="hero-wc-canvas" id="heroWC"></canvas>
+      <div class="hero-eyebrow">Aprendizaje &amp; Cerebro</div>
+      <h1>Cerebro en<em>construcción</em></h1>
+      <p class="hero-sub">
+        Aprender cambia el cerebro. Una exploración visual de cómo los estímulos
+        construyen, conexión por conexión, la arquitectura neuronal.
+      </p>
+      <div class="scroll-cue">
+        <span>scrolleá para crecer</span
+        ><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+    </section>
+
+    <div class="brain-wrap" id="brainWrap">
+      <div class="brain-sticky">
+        <canvas id="brainCanvas"></canvas>
+        <canvas
+          id="brain3dCanvas"
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+          "
+        ></canvas>
+      </div>
+      <div class="scroll-height"></div>
+    </div>
+
+    <div class="brain-overlay" id="overlay">
+      <div class="age-display visible" id="oAge">Nacimiento</div>
+      <h3 class="visible" id="oTitle">
+        100 mil millones de neuronas.<br />Casi ninguna conexión.
+      </h3>
+      <p class="visible" id="oDesc">
+        Cada sonido, cada caricia, cada mirada empieza a tender los primeros
+        puentes.
+      </p>
+    </div>
+
+    <div class="stimulus-panel" id="stimPanel">
+      <div class="stim-hint" id="stimHint">
+        Tocá un estímulo para activar conexiones ↓
+      </div>
+      <button class="stim-btn" onclick="fireStimulus('sonido', this)">
+        🔊 Sonidos
+      </button>
+      <button class="stim-btn" onclick="fireStimulus('visual', this)">
+        👁 Rostros
+      </button>
+      <button class="stim-btn" onclick="fireStimulus('lenguaje', this)">
+        💬 Lenguaje
+      </button>
+      <button class="stim-btn" onclick="fireStimulus('social', this)">
+        🤝 Vínculo
+      </button>
+      <button class="stim-btn" onclick="fireStimulus('juego', this)">
+        🧩 Juego
+      </button>
+    </div>
+
+    <div class="final-msg" id="finalMsg">
+      <h2>El cerebro cuenta la película de lo que <b>vivimos</b></h2>
+      <a href="index.html" class="final-btn">Volver al inicio</a>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════
+      // HERO CANVAS — warm particle animation (matches desarrollo style)
+      // ═══════════════════════════════════════
+      (function () {
+        const hc = document.getElementById("heroWC");
+        if (!hc) return;
+        const ctx = hc.getContext("2d");
+        let W,
+          H,
+          pts = [];
+
+        function resize() {
+          W = hc.width = hc.offsetWidth;
+          H = hc.height = hc.offsetHeight;
+          pts = [];
+          for (let i = 0; i < 90; i++)
+            pts.push({
+              x: Math.random() * W,
+              y: Math.random() * H,
+              vx: (Math.random() - 0.5) * 0.3,
+              vy: (Math.random() - 0.5) * 0.3,
+              r: 1.5 + Math.random() * 3,
+              alpha: 0.06 + Math.random() * 0.14,
+              hue: 5 + Math.random() * 20, // salmon — matches brain outline
+            });
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, W, H);
+          for (const p of pts) {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0) p.x = W;
+            if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H;
+            if (p.y > H) p.y = 0;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${p.hue},62%,56%,${p.alpha})`;
+            ctx.fill();
+          }
+          requestAnimationFrame(draw);
+        }
+
+        resize();
+        draw();
+        window.addEventListener("resize", resize);
+      })();
+
+      // ═══════════════════════════════════════
+      // STAGES
+      // ═══════════════════════════════════════
+      const STAGES = [
+        {
+          age: 0,
+          title: "Nacimiento",
+          desc: "El bebé comienza a interactuar con el mundo que lo rodea. Cada estímulo genera nuevas conexiones. Probá tocar los estímulos de abajo.",
+        },
+        {
+          age: 0.5,
+          title: "6 meses",
+        },
+        {
+          age: 1,
+          title: "1 año",
+        },
+        {
+          age: 2,
+          title: "2 años",
+          desc: "El cerebro alcanza su máxima cantidad de conexiones: 15.000 sinapsis por neurona. La plasticidad es enorme.",
+        },
+        {
+          age: 3.5,
+          title: "3 – 4 años",
+          desc: "Se produce la poda sináptica: Las sinapsis que no se usan, se pierden. Las que se usan, se vuelven más fuertes.",
+        },
+        {
+          age: 6,
+          title: "5 – 6 años",
+          desc: "El número final de conexiones se logra mediante eliminación competitiva. En promedio, un adulto tendrá 7.500 conexiones por neurona.",
+        },
+      ];
+      const SC = {
+        sonido: "#fbbf24",
+        visual: "#f472b6",
+        lenguaje: "#60a5fa",
+        social: "#a78bfa",
+        juego: "#34d399",
+      };
+
+      // ═══════════════════════════════════════
+      // CANVAS
+      // ═══════════════════════════════════════
+      const canvas = document.getElementById("brainCanvas");
+      const ctx = canvas.getContext("2d");
+      let W, H, brainCx, brainCy, brainScale;
+      let neurons = [],
+        connections = [],
+        particles = [];
+      let scrollAge = 0,
+        scrollProgress = 0,
+        zoomProgress = 0;
+      let prevStageIdx = -1;
+      let camX = 0,
+        camY = 0,
+        camS = 1,
+        tCamX = 0,
+        tCamY = 0,
+        tCamS = 1;
+
+      // ═══════════════════════════════════════
+      // BRAIN SHAPE — top-down view with detailed lobed outline
+      // Based on anatomical reference: irregular boundary with bulges (gyri visible at edges)
+      // ═══════════════════════════════════════
+
+      // Left hemisphere — more oval (taller than wide)
+      const LEFT_HEMI_SVG = `
+M 500 60
+C 478 55, 455 60, 435 75
+C 415 70, 392 78, 375 95
+C 358 92, 335 105, 322 125
+C 305 128, 285 145, 275 168
+C 260 175, 246 195, 240 220
+C 228 230, 218 252, 215 278
+C 206 295, 200 320, 200 350
+C 196 375, 198 402, 208 428
+C 208 452, 218 478, 232 500
+C 234 525, 250 550, 270 570
+C 278 595, 300 615, 326 628
+C 342 648, 372 660, 402 660
+C 425 670, 458 670, 482 660
+C 494 663, 500 660, 500 658
+L 500 60
+Z
+`;
+
+      // Right hemisphere — mirror
+      const RIGHT_HEMI_SVG = `
+M 500 60
+C 522 55, 545 60, 565 75
+C 585 70, 608 78, 625 95
+C 642 92, 665 105, 678 125
+C 695 128, 715 145, 725 168
+C 740 175, 754 195, 760 220
+C 772 230, 782 252, 785 278
+C 794 295, 800 320, 800 350
+C 804 375, 802 402, 792 428
+C 792 452, 782 478, 768 500
+C 766 525, 750 550, 730 570
+C 722 595, 700 615, 674 628
+C 658 648, 628 660, 598 660
+C 575 670, 542 670, 518 660
+C 506 663, 500 660, 500 658
+L 500 60
+Z
+`;
+
+      let leftHemiPath2D = null;
+      let rightHemiPath2D = null;
+      let brainTransform = { ox: 0, oy: 0, scale: 1 };
+      let brainBounds = {};
+
+      function buildBrainPaths() {
+        const svgW = 1000,
+          svgH = 720;
+        const targetSize = Math.min(W, H) * 0.78;
+        const scale = targetSize / svgH;
+        const renderW = svgW * scale;
+        const renderH = svgH * scale;
+        const ox = W / 2 - renderW / 2;
+        const oy = H / 2 - renderH / 2;
+        brainTransform = { ox, oy, scale };
+
+        leftHemiPath2D = new Path2D(LEFT_HEMI_SVG);
+        rightHemiPath2D = new Path2D(RIGHT_HEMI_SVG);
+
+        brainBounds = {
+          minX: ox + 196 * scale,
+          maxX: ox + 804 * scale,
+          minY: oy + 55 * scale,
+          maxY: oy + 670 * scale,
+        };
+        brainCx = ox + 500 * scale;
+        brainCy = oy + 360 * scale;
+        brainScale = ((804 - 196) * scale) / 2;
+      }
+
+      const hitCanvas = document.createElement("canvas");
+      hitCanvas.width = 1000;
+      hitCanvas.height = 720;
+      const hitCtx = hitCanvas.getContext("2d");
+
+      function pointInBrain(px, py) {
+        const sx = (px - brainTransform.ox) / brainTransform.scale;
+        const sy = (py - brainTransform.oy) / brainTransform.scale;
+        if (!leftHemiPath2D) return false;
+        return (
+          hitCtx.isPointInPath(leftHemiPath2D, sx, sy) ||
+          hitCtx.isPointInPath(rightHemiPath2D, sx, sy)
+        );
+      }
+
+      // Sulci / gyri — characteristic deep curves visible from above
+      // Each pattern shows the wavy convoluted surface of the cortex
+      const SULCI_SVG = [
+        // ═══ LEFT HEMISPHERE ═══
+        // Frontal gyri (top of brain) — wavy curves going from center outward
+        "M 480 110 Q 440 130, 410 160 Q 385 195, 365 230",
+        "M 460 130 Q 420 165, 395 205 Q 370 245, 350 285",
+        "M 490 165 Q 455 200, 430 245 Q 405 285, 385 320",
+        "M 440 100 Q 395 135, 365 175 Q 335 215, 310 255",
+        // Mid-frontal area — deep curves
+        "M 480 220 Q 435 255, 395 300 Q 360 340, 335 380",
+        "M 490 280 Q 440 315, 395 360 Q 355 400, 325 440",
+        // Central area — large wavy curves
+        "M 485 340 Q 430 375, 380 420 Q 340 460, 315 500",
+        "M 480 400 Q 420 430, 365 475 Q 320 515, 295 550",
+        // Lower curves (parietal/occipital)
+        "M 485 460 Q 420 485, 360 520 Q 310 555, 285 595",
+        "M 480 520 Q 410 545, 345 580 Q 295 610, 280 640",
+        // Edge curves — the indentations seen at the outline
+        "M 280 260 Q 250 295, 235 335",
+        "M 230 380 Q 215 425, 220 470",
+        "M 240 510 Q 245 555, 270 590",
+        // Inner detail near central fissure
+        "M 495 200 Q 480 250, 470 305 Q 465 355, 470 405",
+        "M 495 425 Q 478 475, 470 525 Q 470 575, 480 620",
+        // Diagonal connecting curves
+        "M 430 200 Q 380 240, 340 290",
+        "M 380 320 Q 330 355, 290 395",
+        "M 360 440 Q 305 470, 270 510",
+        "M 400 560 Q 345 590, 305 620",
+        // Small sub-details
+        "M 320 180 Q 295 215, 280 250",
+        "M 270 280 Q 245 315, 235 355",
+        "M 250 420 Q 240 460, 250 495",
+        "M 320 600 Q 310 625, 320 645",
+
+        // ═══ RIGHT HEMISPHERE (mirror) ═══
+        // Frontal gyri
+        "M 520 110 Q 560 130, 590 160 Q 615 195, 635 230",
+        "M 540 130 Q 580 165, 605 205 Q 630 245, 650 285",
+        "M 510 165 Q 545 200, 570 245 Q 595 285, 615 320",
+        "M 560 100 Q 605 135, 635 175 Q 665 215, 690 255",
+        // Mid-frontal
+        "M 520 220 Q 565 255, 605 300 Q 640 340, 665 380",
+        "M 510 280 Q 560 315, 605 360 Q 645 400, 675 440",
+        // Central
+        "M 515 340 Q 570 375, 620 420 Q 660 460, 685 500",
+        "M 520 400 Q 580 430, 635 475 Q 680 515, 705 550",
+        // Lower
+        "M 515 460 Q 580 485, 640 520 Q 690 555, 715 595",
+        "M 520 520 Q 590 545, 655 580 Q 705 610, 720 640",
+        // Edge curves
+        "M 720 260 Q 750 295, 765 335",
+        "M 770 380 Q 785 425, 780 470",
+        "M 760 510 Q 755 555, 730 590",
+        // Inner detail
+        "M 505 200 Q 520 250, 530 305 Q 535 355, 530 405",
+        "M 505 425 Q 522 475, 530 525 Q 530 575, 520 620",
+        // Diagonal
+        "M 570 200 Q 620 240, 660 290",
+        "M 620 320 Q 670 355, 710 395",
+        "M 640 440 Q 695 470, 730 510",
+        "M 600 560 Q 655 590, 695 620",
+        // Sub-details
+        "M 680 180 Q 705 215, 720 250",
+        "M 730 280 Q 755 315, 765 355",
+        "M 750 420 Q 760 460, 750 495",
+        "M 680 600 Q 690 625, 680 645",
+      ];
+
+      function drawBrainOutline(alpha) {
+        if (alpha < 0.005) return;
+        if (!leftHemiPath2D) return;
+
+        ctx.save();
+        ctx.translate(brainTransform.ox, brainTransform.oy);
+        ctx.scale(brainTransform.scale, brainTransform.scale);
+
+        const lw = 2.8 / (camS * brainTransform.scale);
+
+        // ─── Subtle inner fill ───
+        const grdL = ctx.createRadialGradient(330, 360, 0, 330, 360, 360);
+        grdL.addColorStop(0, `rgba(240,120,110,${alpha * 0.1})`);
+        grdL.addColorStop(1, "transparent");
+        ctx.fillStyle = grdL;
+        ctx.fill(leftHemiPath2D);
+
+        const grdR = ctx.createRadialGradient(670, 360, 0, 670, 360, 360);
+        grdR.addColorStop(0, `rgba(240,120,110,${alpha * 0.1})`);
+        grdR.addColorStop(1, "transparent");
+        ctx.fillStyle = grdR;
+        ctx.fill(rightHemiPath2D);
+
+        // ─── Main outlines with glow ───
+        ctx.shadowColor = `rgba(240,120,110,${alpha})`;
+        ctx.shadowBlur = 30 / (camS * brainTransform.scale);
+        ctx.strokeStyle = `rgba(240,120,110,${alpha * 0.95})`;
+        ctx.lineWidth = lw;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke(leftHemiPath2D);
+        ctx.stroke(rightHemiPath2D);
+        ctx.shadowBlur = 0;
+
+        // ─── Central fissure (more visible gap between hemispheres) ───
+        ctx.beginPath();
+        ctx.moveTo(500, 70);
+        ctx.bezierCurveTo(498, 200, 502, 400, 500, 655);
+        ctx.strokeStyle = `rgba(240,120,110,${alpha * 0.9})`;
+        ctx.lineWidth = lw * 1.1;
+        ctx.shadowColor = `rgba(240,120,110,${alpha * 0.7})`;
+        ctx.shadowBlur = 15 / (camS * brainTransform.scale);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // ─── Sulci / Gyri (the wavy surface lines) ───
+        const sulciAlpha = alpha * 0.1;
+        const sulciLw = lw * 0.3;
+        ctx.strokeStyle = `rgba(240,120,110,${sulciAlpha})`;
+        ctx.lineWidth = sulciLw;
+        for (const pathStr of SULCI_SVG) {
+          const p = new Path2D(pathStr);
+          ctx.stroke(p);
+        }
+
+        ctx.restore();
+      }
+
+      // ═══════════════════════════════════════
+      // INIT NEURONS
+      // ═══════════════════════════════════════
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        buildBrainPaths();
+        if (!neurons.length) initBrain();
+      }
+
+      function initBrain() {
+        neurons = [];
+        connections = [];
+        const N = 200;
+        let placed = 0,
+          attempts = 0;
+
+        while (placed < N && attempts < N * 30) {
+          attempts++;
+          const x =
+            brainBounds.minX +
+            Math.random() * (brainBounds.maxX - brainBounds.minX);
+          const y =
+            brainBounds.minY +
+            Math.random() * (brainBounds.maxY - brainBounds.minY);
+          if (!pointInBrain(x, y)) continue;
+
+          const m = 10;
+          const edgeCount = [
+            [-m, 0],
+            [m, 0],
+            [0, -m],
+            [0, m],
+          ].filter(([dx, dy]) => !pointInBrain(x + dx, y + dy)).length;
+          if (edgeCount > 1 && Math.random() > 0.2) continue;
+
+          // Dendrites: few branches at birth, more grow over time
+          // Base branches visible early, extra branches appear later
+          const earlyBranches = 2 + Math.floor(Math.random() * 2); // 2-3 at birth
+          const lateBranches = 3 + Math.floor(Math.random() * 4); // 3-6 more grow later
+          const allDendrites = [];
+
+          // Early dendrites (short, simple)
+          for (let i = 0; i < earlyBranches; i++) {
+            const angle =
+              ((Math.PI * 2) / earlyBranches) * i + (Math.random() - 0.5) * 0.8;
+            buildBranch(
+              allDendrites,
+              x,
+              y,
+              angle,
+              brainScale * 0.04 * (0.5 + Math.random() * 0.5),
+              0,
+              1,
+            );
+          }
+          // Mark early dendrites with low birthDelay
+          allDendrites.forEach((b) => {
+            b.birthDelay = b.depth * 0.05;
+          });
+
+          const earlyCount = allDendrites.length;
+
+          // Late dendrites (longer, more branched — appear 0.3-2 years)
+          for (let i = 0; i < lateBranches; i++) {
+            const angle =
+              ((Math.PI * 2) / lateBranches) * i + (Math.random() - 0.5) * 1.0;
+            buildBranch(
+              allDendrites,
+              x,
+              y,
+              angle,
+              brainScale * 0.07 * (0.6 + Math.random() * 0.5),
+              0,
+              2 + Math.floor(Math.random() * 2),
+            );
+          }
+          // Mark late dendrites with higher birthDelay (they grow as age increases)
+          for (let i = earlyCount; i < allDendrites.length; i++) {
+            allDendrites[i].birthDelay =
+              0.3 + Math.random() * 1.5 + allDendrites[i].depth * 0.1;
+          }
+
+          // Assign one of 3 colors: violet, orange, blue
+          const colorIdx = Math.floor(Math.random() * 3);
+          neurons.push({
+            x,
+            y,
+            bx: x,
+            by: y,
+            r: 2.5 + Math.random() * 3,
+            act: 0,
+            birth: Math.random() * 0.15, // most neurons present at birth
+            ph: Math.random() * Math.PI * 2,
+            conns: [],
+            dendrites: allDendrites,
+            colorIdx,
+          });
+          placed++;
+        }
+
+        // Connections (axons between neurons)
+        // - Very few at birth
+        // - Explosive density peak at 2 years
+        // - Sharp dramatic pruning from 3 years onward
+        for (let i = 0; i < neurons.length; i++) {
+          for (let j = i + 1; j < neurons.length; j++) {
+            const dx = neurons[i].bx - neurons[j].bx;
+            const dy = neurons[i].by - neurons[j].by;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            const maxD = brainScale * 0.6; // wider reach = more connections at peak
+            const prob = 0.48; // higher density for stronger 2yr peak
+            if (d < maxD && Math.random() < prob) {
+              const mx = (neurons[i].bx + neurons[j].bx) / 2;
+              const my = (neurons[i].by + neurons[j].by) / 2;
+              const perp = Math.atan2(dy, dx) + Math.PI / 2;
+              const bend = (Math.random() - 0.5) * d * 0.4;
+              const cp1x =
+                mx +
+                Math.cos(perp) * bend * 0.6 +
+                (Math.random() - 0.5) * d * 0.15;
+              const cp1y =
+                my +
+                Math.sin(perp) * bend * 0.6 +
+                (Math.random() - 0.5) * d * 0.15;
+              const cp2x =
+                mx +
+                Math.cos(perp) * bend * 0.4 +
+                (Math.random() - 0.5) * d * 0.15;
+              const cp2y =
+                my +
+                Math.sin(perp) * bend * 0.4 +
+                (Math.random() - 0.5) * d * 0.15;
+
+              // Born time: big explosion in year 1-2
+              const r = Math.random();
+              let born;
+              if (r < 0.03)
+                born = Math.random() * 0.1; // 3% at birth
+              else if (r < 0.08)
+                born = 0.1 + Math.random() * 0.4; // 5% by 6 months
+              else if (r < 0.25)
+                born = 0.5 + Math.random() * 0.5; // 17% in 1st year
+              else born = 1.0 + Math.random() * 1.0; // 75% in 2nd year — peak
+
+              // Pruning: starts sharply at 3yrs, very fast fade (0.2 units = sudden)
+              const pruneAge = 3.0 + Math.random() * 0.3;
+              // Only 6-15% survive — very dramatic contrast
+              const survivalChance =
+                born < 0.5 ? 0.15 : born < 1.5 ? 0.08 : 0.05;
+
+              connections.push({
+                a: i,
+                b: j,
+                max: 0.3 + Math.random() * 0.7,
+                born: born,
+                prune: pruneAge,
+                survives: Math.random() < survivalChance,
+                ph: Math.random() * Math.PI * 2,
+                cp1x,
+                cp1y,
+                cp2x,
+                cp2y,
+              });
+              neurons[i].conns.push(connections.length - 1);
+              neurons[j].conns.push(connections.length - 1);
+            }
+          }
+        }
+      }
+
+      // Generate a recursive dendrite branch
+
+      function buildBranch(branches, x, y, angle, len, depth, maxDepth) {
+        if (depth > maxDepth || len < 3) return;
+
+        const segments = 3 + Math.floor(Math.random() * 3);
+        const points = [{ x, y }];
+        let cx = x,
+          cy = y,
+          ca = angle;
+
+        for (let s = 0; s < segments; s++) {
+          const segLen = len / segments;
+          ca += (Math.random() - 0.5) * 0.6; // organic wobble
+          cx += Math.cos(ca) * segLen;
+          cy += Math.sin(ca) * segLen;
+          points.push({ x: cx, y: cy });
+        }
+
+        branches.push({
+          points,
+          thickness: Math.max(0.3, 1.8 - depth * 0.5),
+          depth,
+          birthDelay: depth * 0.12 + Math.random() * 0.1,
+        });
+
+        // Sub-branches
+        if (depth < maxDepth) {
+          const numSub = 1 + Math.floor(Math.random() * 2);
+          for (let i = 0; i < numSub; i++) {
+            const splitIdx =
+              1 + Math.floor(Math.random() * (points.length - 1));
+            const splitPt = points[Math.min(splitIdx, points.length - 1)];
+            const subAngle = ca + (Math.random() - 0.5) * 1.5;
+            const subLen = len * (0.4 + Math.random() * 0.25);
+            buildBranch(
+              branches,
+              splitPt.x,
+              splitPt.y,
+              subAngle,
+              subLen,
+              depth + 1,
+              maxDepth,
+            );
+          }
+        }
+      }
+
+      // ═══════════════════════════════════════
+      // HELPERS
+      // ═══════════════════════════════════════
+      function cStr(c, age) {
+        if (c.stimColor) {
+          let s = c.max;
+          if (age > c.prune && !c.survives)
+            s *= Math.max(0, 1 - (age - c.prune) / 0.15);
+          else if (age > c.prune && c.survives)
+            s *= 1 + Math.min(0.8, (age - c.prune) * 0.3);
+          return Math.max(0, Math.min(1, s));
+        }
+        if (age < c.born) return 0;
+        let s = c.max;
+        if (age < c.born + 0.3) s *= (age - c.born) / 0.3;
+        // Pruning: very fast fade — connections vanish in ~0.15 age units (very sudden)
+        if (age > c.prune && !c.survives)
+          s *= Math.max(0, 1 - (age - c.prune) / 0.15);
+        // Surviving connections get noticeably thicker
+        else if (age > c.prune && c.survives)
+          s *= 1 + Math.min(1.2, (age - c.prune) * 0.5);
+        return Math.max(0, Math.min(1, s));
+      }
+      function hexRGB(h) {
+        return [
+          parseInt(h.slice(1, 3), 16),
+          parseInt(h.slice(3, 5), 16),
+          parseInt(h.slice(5, 7), 16),
+        ];
+      }
+
+      // ═══════════════════════════════════════
+      // CAMERA
+      // ═══════════════════════════════════════
+      function updateCamera() {
+        const zoomStart = 0.72;
+        if (scrollProgress < zoomStart) {
+          const p = scrollProgress / zoomStart;
+          tCamS = 2.8 + (1 - p) * 0.5;
+          // Centered — no drift, zoom out from brain center
+          tCamX = brainCx;
+          tCamY = brainCy;
+          zoomProgress = 0;
+        } else {
+          const zp = (scrollProgress - zoomStart) / (1 - zoomStart);
+          const eased = 1 - Math.pow(1 - zp, 3);
+          tCamS = 2.8 - eased * 1.8;
+          tCamX = brainCx;
+          tCamY = brainCy;
+          zoomProgress = eased;
+        }
+        camX += (tCamX - camX) * 0.07;
+        camY += (tCamY - camY) * 0.07;
+        camS += (tCamS - camS) * 0.07;
+      }
+
+      // ═══════════════════════════════════════
+      // DRAW
+      // ═══════════════════════════════════════
+      function draw(t) {
+        ctx.clearRect(0, 0, W, H);
+        const T = t * 0.001;
+        updateCamera();
+
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.scale(camS, camS);
+        ctx.translate(-camX, -camY);
+
+        // Brain outline (zoom out reveal)
+        drawBrainOutline(zoomProgress * 0.95);
+
+        // (clipping handled per-element via pointInBrain check)
+
+        // Ambient glow
+        const ambG = ctx.createRadialGradient(
+          camX,
+          camY,
+          0,
+          camX,
+          camY,
+          brainScale * 0.6,
+        );
+        const ambI = 0.025 + (scrollAge / 6) * 0.035;
+        ambG.addColorStop(0, `rgba(240,120,110,${ambI})`);
+        ambG.addColorStop(0.5, `rgba(56,189,248,${ambI * 0.3})`);
+        ambG.addColorStop(1, "transparent");
+        ctx.fillStyle = ambG;
+        const bw = brainScale * 4;
+        ctx.fillRect(brainCx - bw / 2, brainCy - bw / 2, bw, bw);
+
+        // Draw axon connections (curved)
+        for (const c of connections) {
+          let s = cStr(c, scrollAge);
+          if (s < 0.01) continue;
+          const pulse = Math.sin(T * 2 + c.ph) * 0.2 + 0.8;
+
+          const nA = neurons[c.a],
+            nB = neurons[c.b];
+
+          // Once brain outline appears, skip axons whose control points stray outside the brain
+          if (zoomProgress > 0.05) {
+            if (!pointInBrain(c.cp1x, c.cp1y) || !pointInBrain(c.cp2x, c.cp2y))
+              continue;
+          }
+
+          // Stimulus-created connections glow and fade
+          let isStim = false;
+          if (c.stimGlow !== undefined && c.stimGlow > 0.01) {
+            isStim = true;
+            c.stimGlow *= 0.993; // slow fade
+          }
+
+          // Once brain outline appears: heavily suppress axons so neurons/dendrites dominate
+          if (zoomProgress > 0.05) {
+            // Only draw 1 in 4 axons, very faint and thin
+            if ((c.a + c.b) % 4 !== 0) continue;
+            const alpha = s * 0.025 * (1 - zoomProgress * 0.5);
+            if (alpha < 0.005) continue;
+            ctx.beginPath();
+            ctx.moveTo(nA.x, nA.y);
+            ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, nB.x, nB.y);
+            ctx.strokeStyle = `rgba(240,120,110,${alpha})`;
+            ctx.lineWidth = 0.3 / camS;
+            ctx.stroke();
+            continue;
+          }
+
+          // Before brain outline: normal rendering
+          const pulse2 = pulse; // already defined above
+          const alpha = s * pulse2 * (isStim ? 0.4 : 0.13);
+          ctx.beginPath();
+          ctx.moveTo(nA.x, nA.y);
+          ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, nB.x, nB.y);
+
+          let col;
+          if (isStim && c.stimColor) {
+            const [r, g, b] = hexRGB(c.stimColor);
+            const gm = c.stimGlow;
+            col = `rgba(${Math.round(110 + (r - 110) * gm)},${Math.round(231 + (g - 231) * gm)},${Math.round(183 + (b - 183) * gm)},${alpha})`;
+          } else {
+            col = `rgba(240,120,110,${alpha})`;
+          }
+
+          const lw = 1 / camS;
+          if (isStim && c.stimGlow > 0.3) {
+            ctx.strokeStyle = col;
+            ctx.lineWidth = lw * (1.5 + s * 0.8);
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 10 / camS;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          } else if (scrollAge > 3.5 && c.survives && s > 0.5) {
+            ctx.strokeStyle = col;
+            ctx.lineWidth = lw * (1.2 + s * 0.8);
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 6 / camS;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          } else {
+            ctx.strokeStyle = col;
+            ctx.lineWidth = lw * (0.4 + s * 0.6);
+            ctx.stroke();
+          }
+        }
+
+        // Draw neurons (soma + dendrites)
+        // Subtle fade-out as 3D takes over
+        const transitionT =
+          scrollProgress > 0.85
+            ? Math.min(1, (scrollProgress - 0.85) / 0.1)
+            : 0;
+
+        // Reset targets if not in transition
+        if (transitionT === 0)
+          neurons.forEach((n) => {
+            n.tx = null;
+            n.ty = null;
+          });
+
+        for (const n of neurons) {
+          if (scrollAge < n.birth) continue;
+          const cc = n.conns.filter(
+            (ci) => cStr(connections[ci], scrollAge) > 0.1,
+          ).length;
+          const act = Math.min(1, cc / 5);
+          n.act += (act - n.act) * 0.05;
+          const breathe = Math.sin(T * 1.5 + n.ph) * 0.15 + 0.85;
+          const fadeOut = 1 - transitionT;
+          const a = (0.1 + n.act * 0.5) * fadeOut;
+          if (a < 0.01) continue;
+          n.x = n.bx + Math.sin(T * 0.4 + n.ph) * 1.2;
+          n.y = n.by + Math.cos(T * 0.6 + n.ph) * 1.2;
+
+          // Color: green until pruning at 3yrs, then gradually shift to per-neuron color
+          // blend goes 0→1 as scrollAge goes 3.0→6.0
+          const colorBlend = Math.max(0, Math.min(1, (scrollAge - 3.0) / 3.0));
+          let baseColor;
+          if (colorBlend > 0) {
+            const NEURON_COLORS = [
+              [240, 171, 252], // violet
+              [251, 146, 60], // orange
+              [96, 165, 250], // blue
+            ];
+            const nc = NEURON_COLORS[n.colorIdx ?? 0];
+            const green = [110, 231, 183];
+            baseColor = [
+              Math.round(green[0] + (nc[0] - green[0]) * colorBlend),
+              Math.round(green[1] + (nc[1] - green[1]) * colorBlend),
+              Math.round(green[2] + (nc[2] - green[2]) * colorBlend),
+            ];
+          } else {
+            baseColor = [110, 231, 183];
+          }
+          const drawColor = baseColor;
+
+          // Normal drawing — dendrites + soma, fading out during transition
+          const dendAlpha = a * (0.2 + n.act * 0.35);
+          const offsetX = n.x - n.bx;
+          const offsetY = n.y - n.by;
+
+          for (const branch of n.dendrites) {
+            const branchAge = scrollAge - n.birth - branch.birthDelay;
+            if (branchAge < 0) continue;
+            const growProgress = Math.min(1, branchAge / 1.5);
+            const pts = branch.points;
+            const drawCount = Math.max(2, Math.ceil(pts.length * growProgress));
+
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x + offsetX, pts[0].y + offsetY);
+            for (let pi = 1; pi < drawCount; pi++) {
+              if (pi < pts.length - 1) {
+                const cpx = (pts[pi].x + pts[pi + 1].x) / 2 + offsetX;
+                const cpy = (pts[pi].y + pts[pi + 1].y) / 2 + offsetY;
+                ctx.quadraticCurveTo(
+                  pts[pi].x + offsetX,
+                  pts[pi].y + offsetY,
+                  cpx,
+                  cpy,
+                );
+              } else {
+                ctx.lineTo(pts[pi].x + offsetX, pts[pi].y + offsetY);
+              }
+            }
+
+            const thicknessScale = branch.thickness / camS;
+            ctx.strokeStyle = `rgba(${drawColor[0]},${drawColor[1]},${drawColor[2]},${dendAlpha * growProgress})`;
+            ctx.lineWidth = thicknessScale * breathe;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.stroke();
+          }
+
+          // Soma glow
+          const somaR = n.r * breathe;
+          if (n.act > 0.15) {
+            const glR = somaR * 6;
+            const gg = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glR);
+            gg.addColorStop(
+              0,
+              `rgba(${drawColor[0]},${drawColor[1]},${drawColor[2]},${a * 0.12})`,
+            );
+            gg.addColorStop(1, "transparent");
+            ctx.fillStyle = gg;
+            ctx.fillRect(n.x - glR, n.y - glR, glR * 2, glR * 2);
+          }
+
+          // Soma body
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, somaR, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${drawColor[0]},${drawColor[1]},${drawColor[2]},${a})`;
+          ctx.fill();
+        }
+
+        // Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+          p.life -= 0.015;
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+          const [pr, pg, pb] = hexRGB(p.col);
+          ctx.fillStyle = `rgba(${pr},${pg},${pb},${p.life * 0.6})`;
+          ctx.fill();
+        }
+
+        ctx.restore();
+        render3DBrain();
+        requestAnimationFrame(draw);
+      }
+
+      // ═══════════════════════════════════════
+      // STIMULUS
+      // ═══════════════════════════════════════
+      function fireStimulus(type, btn) {
+        const hint = document.getElementById("stimHint");
+        if (hint) hint.style.opacity = "0";
+
+        const color = SC[type];
+
+        // Find all alive neurons and pick randomly across the brain
+        const aliveNeurons = [];
+        neurons.forEach((n, idx) => {
+          if (scrollAge >= n.birth) aliveNeurons.push(idx);
+        });
+
+        // Shuffle and pick pairs to create new connections spread across the brain
+        const shuffled = aliveNeurons.sort(() => Math.random() - 0.5);
+        const numNew = Math.min(
+          Math.floor(shuffled.length / 2),
+          5 + Math.floor(Math.random() * 6),
+        );
+
+        for (let i = 0; i < numNew * 2; i += 2) {
+          if (i + 1 >= shuffled.length) break;
+          const ai = shuffled[i],
+            bi = shuffled[i + 1];
+          const nA = neurons[ai],
+            nB = neurons[bi];
+          const dx = nA.bx - nB.bx,
+            dy = nA.by - nB.by;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d > brainScale * 0.6) continue;
+
+          // Check if connection already exists
+          const exists = connections.some(
+            (c) => (c.a === ai && c.b === bi) || (c.a === bi && c.b === ai),
+          );
+          if (exists) continue;
+
+          // Curved axon
+          const mx = (nA.bx + nB.bx) / 2,
+            my = (nA.by + nB.by) / 2;
+          const perp = Math.atan2(dy, dx) + Math.PI / 2;
+          const bend = (Math.random() - 0.5) * d * 0.4;
+
+          connections.push({
+            a: ai,
+            b: bi,
+            max: 0.6 + Math.random() * 0.4,
+            born: scrollAge, // born RIGHT NOW
+            prune: scrollAge + 3 + Math.random() * 3,
+            survives: Math.random() < 0.55,
+            ph: Math.random() * Math.PI * 2,
+            cp1x:
+              mx +
+              Math.cos(perp) * bend * 0.6 +
+              (Math.random() - 0.5) * d * 0.15,
+            cp1y:
+              my +
+              Math.sin(perp) * bend * 0.6 +
+              (Math.random() - 0.5) * d * 0.15,
+            cp2x:
+              mx +
+              Math.cos(perp) * bend * 0.4 +
+              (Math.random() - 0.5) * d * 0.15,
+            cp2y:
+              my +
+              Math.sin(perp) * bend * 0.4 +
+              (Math.random() - 0.5) * d * 0.15,
+            // Stimulus-created properties
+            stimColor: color,
+            stimGlow: 1.0, // fades over time
+          });
+          neurons[ai].conns.push(connections.length - 1);
+          neurons[bi].conns.push(connections.length - 1);
+        }
+
+        // Small particle burst at focus
+        for (let i = 0; i < 12; i++) {
+          const a = Math.random() * Math.PI * 2,
+            sp = (1 + Math.random() * 3) / camS;
+          particles.push({
+            x: camX,
+            y: camY,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp,
+            life: 1,
+            col: color,
+            r: 2 + Math.random() * 3,
+          });
+        }
+
+        document
+          .querySelectorAll(".stim-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        setTimeout(() => btn.classList.remove("active"), 1200);
+      }
+
+      // ═══════════════════════════════════════
+      // SCROLL
+      // ═══════════════════════════════════════
+      const progressFill = document.getElementById("progressFill");
+      const agePill = document.getElementById("agePill");
+      const brainWrap = document.getElementById("brainWrap");
+      const overlay = document.getElementById("overlay");
+      const oAge = document.getElementById("oAge");
+      const oTitle = document.getElementById("oTitle");
+      const oDesc = document.getElementById("oDesc");
+      const stimPanel = document.getElementById("stimPanel");
+      const stageAges = STAGES.map((s) => s.age);
+
+      function updateScroll() {
+        const sTop = window.scrollY,
+          dH = document.documentElement.scrollHeight - window.innerHeight;
+        progressFill.style.height =
+          Math.max(0, Math.min(1, sTop / dH)) * 100 + "%";
+
+        const bRect = brainWrap.getBoundingClientRect();
+        const bH = brainWrap.offsetHeight - window.innerHeight;
+        scrollProgress = Math.max(0, Math.min(1, -bRect.top / bH));
+
+        const ageP = Math.min(scrollProgress / 0.72, 1);
+        const sI = ageP * (stageAges.length - 1);
+        const si = Math.floor(sI),
+          sf = sI - si;
+        const fromA = stageAges[Math.min(si, stageAges.length - 1)];
+        const toA = stageAges[Math.min(si + 1, stageAges.length - 1)];
+        scrollAge = fromA + (toA - fromA) * sf;
+
+        const inBrain = bRect.top < 0 && bRect.bottom > window.innerHeight;
+
+        if (inBrain) {
+          agePill.classList.add("visible");
+          agePill.textContent =
+            scrollAge < 1
+              ? Math.round(scrollAge * 12) + " meses"
+              : scrollAge.toFixed(1).replace(".0", "") +
+                (scrollAge < 1.05 ? " año" : " años");
+        } else agePill.classList.remove("visible");
+
+        let stgIdx = 0;
+        for (let i = STAGES.length - 1; i >= 0; i--) {
+          if (scrollAge >= STAGES[i].age - 0.1) {
+            stgIdx = i;
+            break;
+          }
+        }
+        if (stgIdx !== prevStageIdx) {
+          prevStageIdx = stgIdx;
+          const stg = STAGES[stgIdx];
+          oAge.classList.remove("visible");
+          oTitle.classList.remove("visible");
+          oDesc.classList.remove("visible");
+          setTimeout(() => {
+            oAge.textContent = stg.label;
+            oTitle.innerHTML = stg.title;
+            oDesc.textContent = stg.desc;
+            oAge.classList.add("visible");
+            oTitle.classList.add("visible");
+            oDesc.classList.add("visible");
+          }, 250);
+        }
+
+        const overlayOp =
+          scrollProgress > 0.78
+            ? Math.max(0, 1 - (scrollProgress - 0.78) / 0.12)
+            : 1;
+        overlay.style.opacity = inBrain ? overlayOp : 0;
+        if (inBrain && scrollProgress < 0.8) stimPanel.classList.add("visible");
+        else stimPanel.classList.remove("visible");
+
+        // Final message — show when zoom out is fully complete
+        const finalMsg = document.getElementById("finalMsg");
+        if (scrollProgress > 0.97) {
+          finalMsg.classList.add("visible");
+        } else {
+          finalMsg.classList.remove("visible");
+        }
+
+        // 3D brain transition — fade in during zoom out, full at end
+        const canvas3d = document.getElementById("brain3dCanvas");
+        if (scrollProgress > 0.85) {
+          if (!brain3dInitialized) init3DBrain();
+          brain3dActive = true;
+          // Fade in 2D fades out, 3D fades in between 0.85 and 0.95
+          const t = Math.min(1, (scrollProgress - 0.85) / 0.1);
+          canvas3d.style.opacity = t;
+          document.getElementById("brainCanvas").style.opacity = 1 - t;
+        } else {
+          brain3dActive = false;
+          canvas3d.style.opacity = 0;
+          document.getElementById("brainCanvas").style.opacity = 1;
+        }
+
+        // Back button style
+        const backBtn = document.getElementById("backBtn");
+        if (inBrain) {
+          backBtn.style.color = "rgba(255,255,255,.5)";
+          backBtn.style.background = "rgba(255,255,255,.06)";
+          backBtn.style.borderColor = "rgba(255,255,255,.1)";
+        } else {
+          backBtn.style.color = "#999";
+          backBtn.style.background = "rgba(0,0,0,.03)";
+          backBtn.style.borderColor = "#e0dbd3";
+        }
+      }
+
+      // ═══════════════════════════════════════
+      // 3D BRAIN (Three.js)
+      // ═══════════════════════════════════════
+      let scene3d, camera3d, renderer3d;
+      let brainGroup;
+      let brain3dInitialized = false;
+      let brain3dActive = false;
+      let brain3dRotationY = 0;
+
+      function init3DBrain() {
+        if (brain3dInitialized) return;
+        brain3dInitialized = true;
+
+        const canvas3d = document.getElementById("brain3dCanvas");
+        scene3d = new THREE.Scene();
+        scene3d.fog = new THREE.FogExp2(0x0a0a14, 0.018);
+
+        camera3d = new THREE.PerspectiveCamera(
+          45,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        camera3d.position.set(0, 0, 65);
+
+        renderer3d = new THREE.WebGLRenderer({
+          canvas: canvas3d,
+          alpha: true,
+          antialias: true,
+        });
+        renderer3d.setSize(window.innerWidth, window.innerHeight);
+        renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer3d.setClearColor(0x000000, 0);
+
+        brainGroup = new THREE.Group();
+        scene3d.add(brainGroup);
+
+        // ──────────────────────────────────────────
+        // ANATOMICAL BRAIN SHAPE
+        // Lateral view: front-right is frontal lobe (rounded), back-left is occipital,
+        // bottom-back has cerebellum bulge, gentle taper at brainstem
+        // ──────────────────────────────────────────
+
+        // Brain shape function — given a point in normalized space,
+        // returns whether it's inside the brain volume
+        function brainSDF(x, y, z) {
+          // Main cerebrum: elongated ellipsoid (front-back longer)
+          // x: left-right (-1 to 1)
+          // y: top-bottom (-1 to 1)
+          // z: front-back (-1 to 1, +z is front)
+
+          // Main shape — slightly squashed ellipsoid
+          const ex = x / 1.0;
+          const ey = y / 0.85;
+          const ez = z / 1.25;
+          let main = ex * ex + ey * ey + ez * ez;
+
+          // Frontal lobe bulge (front-top)
+          if (z > 0.4 && y > 0) {
+            const fx = x / 0.9;
+            const fy = (y - 0.15) / 0.75;
+            const fz = (z - 0.5) / 0.7;
+            const frontal = fx * fx + fy * fy + fz * fz;
+            if (frontal < 1) main = Math.min(main, frontal * 0.95);
+          }
+
+          // Cerebellum bulge (back-bottom)
+          if (z < -0.4 && y < 0.1) {
+            const cx = x / 0.6;
+            const cy = (y + 0.55) / 0.45;
+            const cz = (z + 0.7) / 0.45;
+            const cereb = cx * cx + cy * cy + cz * cz;
+            if (cereb < 1) main = Math.min(main, cereb * 0.85);
+          }
+
+          // Brainstem taper (bottom)
+          if (y < -0.6 && z > -0.5 && z < 0.2) {
+            const sx = x / 0.25;
+            const sy = (y + 0.85) / 0.3;
+            const sz = z / 0.4;
+            const stem = sx * sx + sy * sy + sz * sz;
+            if (stem < 1) main = Math.min(main, stem * 0.9);
+          }
+
+          return main; // <1 means inside
+        }
+
+        // Generate points along the surface and inside
+        const points = [];
+        const surfacePoints = []; // points biased to surface for visual definition
+        const TARGET_TOTAL = 3500;
+        const SCALE = 16;
+        const FISSURE = 0.08; // central fissure gap (in normalized coords)
+
+        let placed = 0,
+          attempts = 0;
+        while (placed < TARGET_TOTAL && attempts < TARGET_TOTAL * 80) {
+          attempts++;
+          const x = (Math.random() * 2 - 1) * 1.1;
+          const y = (Math.random() * 2 - 1) * 1.0;
+          const z = (Math.random() * 2 - 1) * 1.4;
+
+          const inside = brainSDF(x, y, z);
+          if (inside > 1) continue;
+
+          // Central fissure — skip points right on midline (creates visible gap from above)
+          if (Math.abs(x) < FISSURE && y > -0.3 && z > -0.3) continue;
+
+          // Bias toward surface — keep more points where SDF is close to 1 (boundary)
+          const surfaceBias = inside; // 0=center, 1=surface
+
+          if (surfaceBias > 0.85) {
+            // Surface — keep most
+            surfacePoints.push(
+              new THREE.Vector3(x * SCALE, y * SCALE, z * SCALE),
+            );
+            placed++;
+          } else if (surfaceBias > 0.55 && Math.random() < 0.6) {
+            // Outer mantle — keep many
+            points.push(new THREE.Vector3(x * SCALE, y * SCALE, z * SCALE));
+            placed++;
+          } else if (Math.random() < 0.15) {
+            // Deep — keep few
+            points.push(new THREE.Vector3(x * SCALE, y * SCALE, z * SCALE));
+            placed++;
+          }
+        }
+
+        // Combine all points but track which are surface
+        const allPoints = [...surfacePoints, ...points];
+        const isSurface = [
+          ...surfacePoints.map(() => true),
+          ...points.map(() => false),
+        ];
+
+        // ──────────────────────────────────────────
+        // COLOR PALETTE — violet/magenta/cyan/orange like reference
+        // ──────────────────────────────────────────
+        const C_VIOLET = new THREE.Color(0x9b6dff);
+        const C_MAGENTA = new THREE.Color(0xd946ef);
+        const C_CYAN = new THREE.Color(0x22d3ee);
+        const C_ORANGE = new THREE.Color(0xf97316);
+        const C_AMBER = new THREE.Color(0xfbbf24);
+        const C_PINK = new THREE.Color(0xec4899);
+
+        // Pick "hotspot" centers — clusters of bright color (like the bright nodes in the reference)
+        const hotspots = [];
+        const numHotspots = 12;
+        for (let i = 0; i < numHotspots; i++) {
+          const hx = (Math.random() * 2 - 1) * 0.85;
+          const hy = (Math.random() * 2 - 1) * 0.7;
+          const hz = (Math.random() * 2 - 1) * 1.1;
+          if (brainSDF(hx, hy, hz) > 0.95) {
+            i--;
+            continue;
+          }
+          const colors = [C_CYAN, C_ORANGE, C_AMBER, C_PINK, C_MAGENTA];
+          hotspots.push({
+            pos: new THREE.Vector3(hx * SCALE, hy * SCALE, hz * SCALE),
+            color: colors[Math.floor(Math.random() * colors.length)],
+            radius: 2 + Math.random() * 3,
+          });
+        }
+
+        function getColorAt(p) {
+          // Default: violet/magenta gradient based on position
+          const r = Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z) / SCALE;
+          const baseT = Math.min(1, r * 1.1);
+          let col = C_VIOLET.clone().lerp(
+            C_MAGENTA,
+            baseT * 0.5 + Math.random() * 0.3,
+          );
+
+          // Check if near a hotspot — blend toward hotspot color
+          let bestInfluence = 0;
+          let hotColor = null;
+          for (const h of hotspots) {
+            const d = p.distanceTo(h.pos);
+            const influence = Math.max(0, 1 - d / h.radius);
+            if (influence > bestInfluence) {
+              bestInfluence = influence;
+              hotColor = h.color;
+            }
+          }
+          if (hotColor && bestInfluence > 0.05) {
+            col.lerp(hotColor, Math.min(0.9, bestInfluence));
+          }
+          return col;
+        }
+
+        // ──────────────────────────────────────────
+        // LAYER 1: Main point cloud (smaller dots, dense surface)
+        // ──────────────────────────────────────────
+        const pointsGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(allPoints.length * 3);
+        const colors = new Float32Array(allPoints.length * 3);
+
+        for (let i = 0; i < allPoints.length; i++) {
+          positions[i * 3] = allPoints[i].x;
+          positions[i * 3 + 1] = allPoints[i].y;
+          positions[i * 3 + 2] = allPoints[i].z;
+          const col = getColorAt(allPoints[i]);
+          // Dim non-surface points slightly
+          const brightness = isSurface[i] ? 1.0 : 0.55;
+          colors[i * 3] = col.r * brightness;
+          colors[i * 3 + 1] = col.g * brightness;
+          colors[i * 3 + 2] = col.b * brightness;
+        }
+
+        pointsGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(positions, 3),
+        );
+        pointsGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+        const pointsMat = new THREE.PointsMaterial({
+          size: 0.18,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true,
+          depthWrite: false,
+        });
+        brainGroup.add(new THREE.Points(pointsGeo, pointsMat));
+
+        // ──────────────────────────────────────────
+        // LAYER 2: Bright hotspot clusters (extra dense bright nodes)
+        // ──────────────────────────────────────────
+        const hotPoints = [];
+        const hotColors = [];
+        for (const h of hotspots) {
+          const numHot = 30 + Math.floor(Math.random() * 30);
+          for (let i = 0; i < numHot; i++) {
+            const dir = new THREE.Vector3(
+              Math.random() * 2 - 1,
+              Math.random() * 2 - 1,
+              Math.random() * 2 - 1,
+            ).normalize();
+            const dist = Math.random() * h.radius * 0.8;
+            const p = h.pos.clone().add(dir.multiplyScalar(dist));
+            // Verify still inside brain
+            const nx = p.x / SCALE,
+              ny = p.y / SCALE,
+              nz = p.z / SCALE;
+            if (brainSDF(nx, ny, nz) > 1) continue;
+
+            hotPoints.push(p.x, p.y, p.z);
+            const intensity = 1 + Math.random() * 0.5;
+            hotColors.push(
+              h.color.r * intensity,
+              h.color.g * intensity,
+              h.color.b * intensity,
+            );
+          }
+        }
+        const hotGeo = new THREE.BufferGeometry();
+        hotGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(new Float32Array(hotPoints), 3),
+        );
+        hotGeo.setAttribute(
+          "color",
+          new THREE.BufferAttribute(new Float32Array(hotColors), 3),
+        );
+        const hotMat = new THREE.PointsMaterial({
+          size: 0.35,
+          vertexColors: true,
+          transparent: true,
+          opacity: 1.0,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true,
+          depthWrite: false,
+        });
+        brainGroup.add(new THREE.Points(hotGeo, hotMat));
+
+        // ──────────────────────────────────────────
+        // LAYER 3: Connections between nearby points
+        // ──────────────────────────────────────────
+        const linePositions = [];
+        const lineColors = [];
+        const maxDist = 2.5;
+        const maxConnections = 3500;
+        let lineCount = 0;
+
+        // Sort points by some random shuffle to vary connection patterns
+        const indices = allPoints
+          .map((_, i) => i)
+          .sort(() => Math.random() - 0.5);
+
+        for (const i of indices) {
+          if (lineCount >= maxConnections) break;
+          if (!isSurface[i] && Math.random() > 0.4) continue; // surface points more connected
+
+          for (const j of indices) {
+            if (j <= i) continue;
+            if (lineCount >= maxConnections) break;
+            const d = allPoints[i].distanceTo(allPoints[j]);
+            if (d < maxDist && Math.random() < 0.04) {
+              linePositions.push(
+                allPoints[i].x,
+                allPoints[i].y,
+                allPoints[i].z,
+              );
+              linePositions.push(
+                allPoints[j].x,
+                allPoints[j].y,
+                allPoints[j].z,
+              );
+              const col1 = getColorAt(allPoints[i]);
+              const col2 = getColorAt(allPoints[j]);
+              // Dim slightly
+              lineColors.push(col1.r * 0.5, col1.g * 0.5, col1.b * 0.5);
+              lineColors.push(col2.r * 0.5, col2.g * 0.5, col2.b * 0.5);
+              lineCount++;
+            }
+          }
+        }
+
+        const lineGeo = new THREE.BufferGeometry();
+        lineGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(new Float32Array(linePositions), 3),
+        );
+        lineGeo.setAttribute(
+          "color",
+          new THREE.BufferAttribute(new Float32Array(lineColors), 3),
+        );
+
+        const lineMat = new THREE.LineBasicMaterial({
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.3,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        brainGroup.add(new THREE.LineSegments(lineGeo, lineMat));
+
+        // ──────────────────────────────────────────
+        // LAYER 4: Outer halo glow (large soft particles)
+        // ──────────────────────────────────────────
+        const haloGeo = new THREE.BufferGeometry();
+        const haloPositions = new Float32Array(surfacePoints.length * 3);
+        const haloColors = new Float32Array(surfacePoints.length * 3);
+        for (let i = 0; i < surfacePoints.length; i++) {
+          haloPositions[i * 3] = surfacePoints[i].x;
+          haloPositions[i * 3 + 1] = surfacePoints[i].y;
+          haloPositions[i * 3 + 2] = surfacePoints[i].z;
+          const col = getColorAt(surfacePoints[i]);
+          haloColors[i * 3] = col.r;
+          haloColors[i * 3 + 1] = col.g;
+          haloColors[i * 3 + 2] = col.b;
+        }
+        haloGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(haloPositions, 3),
+        );
+        haloGeo.setAttribute("color", new THREE.BufferAttribute(haloColors, 3));
+        const haloMat = new THREE.PointsMaterial({
+          size: 0.55,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.18,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true,
+          depthWrite: false,
+        });
+        brainGroup.add(new THREE.Points(haloGeo, haloMat));
+
+        // ──────────────────────────────────────────
+        // LAYER 5: BRAIN-SHAPED PARTICLE CLOUD
+        // Particles form a larger brain silhouette (top-down) around the central brain
+        // Two hemispheres + brainstem stub, viewed from above
+        // ──────────────────────────────────────────
+        const NUM_RADIATING = 700;
+        const radiatingData = [];
+        const radiatingPositions = new Float32Array(NUM_RADIATING * 3);
+        const radiatingColors = new Float32Array(NUM_RADIATING * 3);
+        const radiatingPalette = [
+          C_VIOLET,
+          C_MAGENTA,
+          C_CYAN,
+          C_ORANGE,
+          C_AMBER,
+          C_PINK,
+        ];
+
+        // Brain shape function (top-down view) — matches outline above
+        // u: left-right (-1 to 1), v: front-back (-1 to 1, +v is back/occipital)
+        function inBrainShape(u, v) {
+          // Skip central fissure gap
+          if (Math.abs(u) < 0.04 && v > -0.85 && v < 0.85) return false;
+
+          // Main brain — elongated oval, slightly wider in middle
+          const isLeft = u < 0;
+          const localU = isLeft ? -u : u;
+
+          // Width varies by v (front-back position) — narrower than before
+          let maxU;
+          if (v < -0.85) {
+            maxU = 0.55 - (Math.abs(v) - 0.85) * 4; // taper at front
+          } else if (v > 0.85) {
+            maxU = 0.55 - (v - 0.85) * 4; // taper at back
+          } else {
+            // Middle section — slight bulge in middle (narrower max)
+            const middleBoost = 1 - Math.pow(v / 0.85, 2) * 0.15;
+            maxU = 0.85 * middleBoost;
+          }
+
+          if (localU > maxU) return false;
+
+          // Add some irregular bumps along the edge (mimics gyri visible from outside)
+          const bumpNoise =
+            Math.sin(v * 7) * 0.04 + Math.sin(v * 13 + 1) * 0.03;
+          if (localU > maxU + bumpNoise) return false;
+
+          return true;
+        }
+
+        // Brain shape boundaries (for projecting to 3D)
+        const BRAIN_HALF_WIDTH = 26; // narrower
+        const BRAIN_HALF_LENGTH = 38; // half-length (front to back)
+        const CLOUD_THICKNESS = 5; // vertical thickness (z) of the cloud
+
+        let placedR = 0,
+          attemptsR = 0;
+        while (placedR < NUM_RADIATING && attemptsR < NUM_RADIATING * 30) {
+          attemptsR++;
+          // Sample point in normalized brain space
+          const u = (Math.random() * 2 - 1) * 1.05;
+          const v = (Math.random() * 2 - 1) * 1.1;
+
+          if (!inBrainShape(u, v)) continue;
+
+          // Distance from center for some bias (more particles near edges)
+          // Project to 3D space — particles arranged in top-down plane (y is up in 3D)
+          // Map normalized (u, v) → 3D (x, z), with small y variation for thickness
+          const x = u * BRAIN_HALF_WIDTH;
+          const z = v * BRAIN_HALF_LENGTH;
+          const y = (Math.random() * 2 - 1) * CLOUD_THICKNESS;
+
+          radiatingPositions[placedR * 3] = x;
+          radiatingPositions[placedR * 3 + 1] = y;
+          radiatingPositions[placedR * 3 + 2] = z;
+
+          // Color: vary by position — outer particles more orange/violet, inner more cyan
+          const distFromCenter = Math.sqrt(u * u + v * v);
+          let col;
+          if (distFromCenter > 0.7) {
+            // Outer edge — warmer colors
+            col = [C_ORANGE, C_AMBER, C_PINK, C_MAGENTA][
+              Math.floor(Math.random() * 4)
+            ];
+          } else {
+            // Inner — cooler with occasional warm
+            col =
+              Math.random() < 0.7
+                ? [C_VIOLET, C_CYAN, C_MAGENTA][Math.floor(Math.random() * 3)]
+                : [C_ORANGE, C_AMBER][Math.floor(Math.random() * 2)];
+          }
+          const intensity = 0.6 + Math.random() * 0.6;
+          radiatingColors[placedR * 3] = col.r * intensity;
+          radiatingColors[placedR * 3 + 1] = col.g * intensity;
+          radiatingColors[placedR * 3 + 2] = col.b * intensity;
+
+          radiatingData.push({
+            baseX: x,
+            baseY: y,
+            baseZ: z,
+            pulsePhase: Math.random() * Math.PI * 2,
+            pulseSpeed: 0.4 + Math.random() * 1.2,
+            pulseAmp: 0.3 + Math.random() * 1.0,
+          });
+
+          placedR++;
+        }
+
+        // Trim arrays to actual count
+        const finalPositions = new Float32Array(placedR * 3);
+        const finalColors = new Float32Array(placedR * 3);
+        for (let i = 0; i < placedR * 3; i++) {
+          finalPositions[i] = radiatingPositions[i];
+          finalColors[i] = radiatingColors[i];
+        }
+
+        const radiatingGeo = new THREE.BufferGeometry();
+        radiatingGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(finalPositions, 3),
+        );
+        radiatingGeo.setAttribute(
+          "color",
+          new THREE.BufferAttribute(finalColors, 3),
+        );
+        const radiatingMat = new THREE.PointsMaterial({
+          size: 0.35,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.95,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true,
+          depthWrite: false,
+        });
+        const radiatingPoints = new THREE.Points(radiatingGeo, radiatingMat);
+        scene3d.add(radiatingPoints); // add to scene NOT brainGroup so they don't rotate with brain
+
+        // Store globally for animation
+        window.__radiatingPoints = radiatingPoints;
+        window.__radiatingData = radiatingData;
+        window.__radiatingPositions = finalPositions;
+
+        // Initial orientation — start at TOP-DOWN view (looking down at hemispheres)
+        brainGroup.rotation.x = -Math.PI / 2; // tilt so we see top of brain
+        brainGroup.rotation.y = 0;
+        brainGroup.rotation.z = 0;
+      }
+
+      function render3DBrain() {
+        if (!brain3dActive || !renderer3d) return;
+        brain3dRotationY += 0.003;
+        // Start at top-down view, rotate around the vertical (Z in world) axis
+        brainGroup.rotation.x =
+          -Math.PI / 2 + Math.sin(brain3dRotationY * 0.4) * 0.12;
+        brainGroup.rotation.z = brain3dRotationY;
+
+        // Animate brain-shaped particle cloud — gentle pulse from base position
+        if (window.__radiatingData && window.__radiatingPoints) {
+          const data = window.__radiatingData;
+          const positions = window.__radiatingPositions;
+          const t = brain3dRotationY;
+          for (let i = 0; i < data.length; i++) {
+            const d = data[i];
+            // Subtle pulse outward from center, plus slight sway
+            const pulse =
+              Math.sin(t * d.pulseSpeed + d.pulsePhase) * d.pulseAmp;
+            const sway = Math.sin(t * 0.5 + d.pulsePhase) * 0.4;
+            // Move slightly in y (vertical bobbing) and outward radially
+            const r = Math.sqrt(d.baseX * d.baseX + d.baseZ * d.baseZ);
+            const scale = 1 + pulse * 0.04;
+            positions[i * 3] = d.baseX * scale;
+            positions[i * 3 + 1] = d.baseY + sway;
+            positions[i * 3 + 2] = d.baseZ * scale;
+          }
+          window.__radiatingPoints.geometry.attributes.position.needsUpdate = true;
+        }
+
+        renderer3d.render(scene3d, camera3d);
+      }
+
+      function resize3DBrain() {
+        if (!renderer3d) return;
+        camera3d.aspect = window.innerWidth / window.innerHeight;
+        camera3d.updateProjectionMatrix();
+        renderer3d.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.addEventListener("resize", resize3DBrain);
+
+      // ═══════════════════════════════════════
+      // INIT
+      // ═══════════════════════════════════════
+      window.addEventListener("resize", resize);
+      window.addEventListener("scroll", updateScroll, { passive: true });
+      resize();
+      camX = tCamX = brainCx;
+      camY = tCamY = brainCy;
+      camS = tCamS = 3.3;
+      updateScroll();
+      requestAnimationFrame(draw);
+    </script>
+  </body>
+</html>
