@@ -153,8 +153,11 @@
         text-transform: uppercase;
         color: #9a5850;
         animation: cueBounce 2s ease-in-out infinite;
-        position: relative;
-        z-index: 1;
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
       }
       .scroll-cue svg {
         width: 16px;
@@ -473,7 +476,7 @@
         construyen, conexión por conexión, la arquitectura neuronal.
       </p>
       <div class="scroll-cue">
-        <span>scrolleá para crecer</span
+        <span>scrolleá hacia abajo</span
         ><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
       </div>
     </section>
